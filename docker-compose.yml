@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: adeoye
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stocksdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data:cached
+    # healthcheck:
+    #   test: ["CMD", "pg_isready", "-U", "postgres"]
+    #   interval: 10s
+    #   retries: 5
+    #   start_period: 5s
+
+volumes:
+  db-data:

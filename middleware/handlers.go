@@ -12,21 +12,25 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/ife-oluwa/go-postres/models"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type response struct {
-	ID int64 `json:"id,omitempty"`
+	ID      int64  `json:"id,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
-
 func createConnection() *sql.DB {
-	err := godotenv.Load("../.env")
+	err := godotenv.Load(".env")
 
 	if err != nil {
 		log.Fatal("Error loading .env file: ", err)
 	}
 	db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
+
+	if err != nil {
+		panic(err)
+	}
 
 	err = db.Ping()
 
@@ -50,8 +54,12 @@ func CreateStock(w http.ResponseWriter, r *http.Request) {
 	insertID, err := insertStock(stock)
 
 	res := response{
-		ID: insertID,
+		ID:      insertID,
 		Message: "stock created successfully.",
+	}
+
+	if err != nil {
+		log.Fatalf("Unable to create stock, error: %v", err)
 	}
 
 	json.NewEncoder(w).Encode(res)
@@ -76,7 +84,7 @@ func GetStock(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetAllStock(w http.ResponseWriter, r *http.Request) {
-	stocks, err	:= getAllStocks()
+	stocks, err := getAllStocks()
 
 	if err != nil {
 		log.Fatalf("Unable to get all stock: %v", err)
@@ -106,8 +114,11 @@ func UpdateStock(w http.ResponseWriter, r *http.Request) {
 
 	msg := fmt.Sprintf("Stock updated successfully. Total rows/records affected: %v", updatedRows)
 
-	res := response {
-		ID: int64(id),
+	if err != nil {
+		log.Fatalf("Unable to update stock: %v", err)
+	}
+	res := response{
+		ID:      int64(id),
 		Message: msg,
 	}
 
@@ -127,7 +138,7 @@ func DeleteStock(w http.ResponseWriter, r *http.Request) {
 	msg := fmt.Sprintf("Stock deleted successfully. Total rows/records %v", deletedRows)
 
 	res := response{
-		ID: int64(id),
+		ID:      int64(id),
 		Message: msg,
 	}
 
@@ -161,7 +172,7 @@ func getStock(id int64) (models.Stock, error) {
 	return stock, err
 }
 
-func getAllStocks() ([]models.Stock, error){
+func getAllStocks() ([]models.Stock, error) {
 	db := createConnection()
 
 	defer db.Close()
@@ -189,7 +200,7 @@ func getAllStocks() ([]models.Stock, error){
 	return stocks, err
 }
 
-func insertStock(stock models.Stock) (int64, error){
+func insertStock(stock models.Stock) (int64, error) {
 	db := createConnection()
 
 	defer db.Close()
@@ -208,7 +219,7 @@ func insertStock(stock models.Stock) (int64, error){
 	return id, err
 }
 
-func updateStock(id int64, stock models.Stock) (int64, error){
+func updateStock(id int64, stock models.Stock) (int64, error) {
 	db := createConnection()
 
 	defer db.Close()
@@ -233,7 +244,7 @@ func updateStock(id int64, stock models.Stock) (int64, error){
 
 }
 
-func deleteStock(id int64) int64{
+func deleteStock(id int64) int64 {
 	db := createConnection()
 
 	defer db.Close()
